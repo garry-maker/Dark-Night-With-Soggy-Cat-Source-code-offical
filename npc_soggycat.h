@@ -66,6 +66,7 @@ private:
     // Madness state variables
     bool  m_bIsMad;
     float m_flNextMadTeleport;
+    int   m_nMadSkin;
 };
 
 #endif // NPC_SOGGYCAT_H
