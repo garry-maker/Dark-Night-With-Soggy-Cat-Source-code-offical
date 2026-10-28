@@ -9,6 +9,9 @@
 #include "ai_node.h"
 #include "mathlib/mathlib.h"
 
+// new features madness soggy cat as shake!
+#include "shake.h"
+
 LINK_ENTITY_TO_CLASS(npc_soggycat, CNPCSoggyCat);
 
 BEGIN_DATADESC(CNPCSoggyCat)
@@ -19,6 +22,8 @@ BEGIN_DATADESC(CNPCSoggyCat)
     DEFINE_FIELD(m_flLookForgiveTime, FIELD_FLOAT),
     DEFINE_FIELD(m_flLastTeleport, FIELD_TIME),
     DEFINE_FIELD(m_flNextDirectorThink, FIELD_TIME),
+    // Hammer Input mapping
+    DEFINE_INPUTFUNC(FIELD_VOID, "BecomeMad", InputBecomeMad),
 END_DATADESC()
 
 CNPCSoggyCat::CNPCSoggyCat()
@@ -32,6 +37,10 @@ CNPCSoggyCat::CNPCSoggyCat()
     m_flLastTeleport = 0.0f;
 
     m_flNextDirectorThink = 0.0f;
+
+    //new features
+    m_bIsMad = false;
+    m_flNextMadTeleport = 0.0f;
 }
 
 void CNPCSoggyCat::Precache()
@@ -70,14 +79,46 @@ void CNPCSoggyCat::Spawn()
 void CNPCSoggyCat::Think()
 {
     CBasePlayer* pPlayer = UTIL_GetLocalPlayer();
-    if (!pPlayer)
+    if (!pPlayer || !pPlayer->IsAlive())
     {
+        // Stop madness automatically if player is dead or missing
+        if (m_bIsMad)
+        {
+            StopMadness();
+        }
         SetNextThink(gpGlobals->curtime + 0.1f);
         return;
     }
 
     float flNow = gpGlobals->curtime;
 
+    // --- MADNESS LOOP ---
+    if (m_bIsMad)
+    {
+        if (flNow >= m_flNextMadTeleport)
+        {
+            // Rapid teleport right behind/near player
+            TeleportBehindPlayer(pPlayer);
+
+            // Screen Shake (Amplitude, Frequency, Duration)
+            UTIL_ScreenShake(pPlayer->GetAbsOrigin(), 25.0f, 150.0f, 0.5f, 500.0f, SHAKE_START);
+
+            // Play Glitch Sound on every loop tick
+            pPlayer->EmitSound("SoggyCat.Glitch");
+
+            // Deal heavy continuous damage / check kill
+            pPlayer->TakeDamage(CTakeDamageInfo(this, this, 25, DMG_GENERIC));
+
+            // Set rapid loop rate (teleports every 0.25 seconds)
+            m_flNextMadTeleport = flNow + 0.25f;
+        }
+
+        // Keep updating think at high frequency during madness
+        SetNextThink(gpGlobals->curtime + 0.05f);
+        return;
+    }
+
+    // Standard behavior when not mad
     if (flNow > m_flNextDirectorThink)
     {
         DirectorThink(pPlayer);
@@ -225,4 +266,20 @@ void CNPCSoggyCat::DirectorThink(CBasePlayer* pPlayer)
 {
     AI_NavGoal_t goal(pPlayer->GetAbsOrigin());
     GetNavigator()->SetGoal(goal);
+}
+
+void CNPCSoggyCat::InputBecomeMad(inputdata_t &inputdata)
+{
+    BecomeMad();
+}
+
+void CNPCSoggyCat::BecomeMad()
+{
+    m_bIsMad = true;
+    m_flNextMadTeleport = gpGlobals->curtime;
+}
+
+void CNPCSoggyCat::StopMadness()
+{
+    m_bIsMad = false;
 }
