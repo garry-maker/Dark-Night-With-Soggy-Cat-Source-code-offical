@@ -106,9 +106,6 @@ void CNPCSoggyCat::Think()
             // Play Glitch Sound on every loop tick
             pPlayer->EmitSound("SoggyCat.Glitch");
 
-            // Deal heavy continuous damage / check kill
-            pPlayer->TakeDamage(CTakeDamageInfo(this, this, 25, DMG_GENERIC));
-
             // Set rapid loop rate (teleports every 0.25 seconds)
             m_flNextMadTeleport = flNow + 0.25f;
         }
@@ -247,8 +244,27 @@ void CNPCSoggyCat::TeleportAwayFromPlayer(CBasePlayer *pPlayer)
 
 void CNPCSoggyCat::TriggerGlitchEffect(CBasePlayer* pPlayer)
 {
+    if (!pPlayer)
+        return;
+
     pPlayer->EmitSound("SoggyCat.Glitch");
-    engine->ClientCommand(pPlayer->edict(), "r_screenoverlay effects/soggycat_glitch\n");
+
+    // Show glitch overlay
+    engine->ClientCommand(
+        pPlayer->edict(),
+        "r_screenoverlay effects/soggycat_glitch\n"
+    );
+
+    // Remove the overlay after 5 seconds
+    engine->ClientCommand(
+        pPlayer->edict(),
+        "alias soggycat_clear_overlay \"r_screenoverlay 0\"\n"
+    );
+
+    engine->ClientCommand(
+        pPlayer->edict(),
+        "wait 500; soggycat_clear_overlay\n"
+    );
 }
 
 void CNPCSoggyCat::TriggerJumpscare(CBasePlayer* pPlayer)
@@ -277,15 +293,15 @@ void CNPCSoggyCat::BecomeMad()
 {
     m_bIsMad = true;
     m_flNextMadTeleport = gpGlobals->curtime;
-    
-    // Change model skin to mad skin
+
+    // Switch to the mad skin
     m_nSkin = 1;
 }
 
 void CNPCSoggyCat::StopMadness()
 {
     m_bIsMad = false;
-    
-    // Reset back to default skin
+
+    // Restore the normal skin
     m_nSkin = 0;
 }
