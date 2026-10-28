@@ -12,6 +12,7 @@
 #include "ai_task.h"
 #include "ai_behavior.h"
 #include "player.h"
+#include "shake.h"
 
 // ===============================
 //   CNPCSoggyCat
@@ -45,6 +46,8 @@ public:
     // Navigation
     void MoveTowardsPlayer(CBasePlayer* pPlayer);
     void DirectorThink(CBasePlayer* pPlayer);
+    // becomeMad in hammer editor
+    void InputBecomeMad(inputdata_t &inputdata);
 
 private:
     // Look detection
@@ -59,6 +62,10 @@ private:
 
     // Director movement
     float m_flNextDirectorThink;
+
+    // Madness state variables
+    bool  m_bIsMad;
+    float m_flNextMadTeleport;
 };
 
 #endif // NPC_SOGGYCAT_H
