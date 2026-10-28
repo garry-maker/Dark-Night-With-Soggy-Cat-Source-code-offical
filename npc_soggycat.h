@@ -48,6 +48,8 @@ public:
     void DirectorThink(CBasePlayer* pPlayer);
     // becomeMad in hammer editor
     void InputBecomeMad(inputdata_t &inputdata);
+    void BecomeMad();
+    void StopMadness();
 
 private:
     // Look detection
