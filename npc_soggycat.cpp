@@ -279,7 +279,7 @@ void CNPCSoggyCat::BecomeMad()
     m_flNextMadTeleport = gpGlobals->curtime;
     
     // Change model skin to mad skin
-    m_nSkin = m_nMadSkin;
+    m_nSkin = 1;
 }
 
 void CNPCSoggyCat::StopMadness()
